@@ -18,7 +18,8 @@ def hash_block(block):
 def get_balance(participant):
     tx_sender = [[tx['amount'] for tx in block['transactions']
                   if tx['sender'] == participant] for block in blockchain]
-    open_tx_sender = [tx['amount'] for tx in open_transactions if tx['sender'] == participant]
+    open_tx_sender = [tx['amount']
+                      for tx in open_transactions if tx['sender'] == participant]
     tx_sender.append(open_tx_sender)
     amount_sent = 0
     for tx in tx_sender:
@@ -113,6 +114,7 @@ def verify_chain():
             return False
     return True
 
+
 def verify_transactions():
     return(all([verify_transaction(tx) for tx in open_transactions]))
 
@@ -134,7 +136,7 @@ while waiting_for_input:
         recipient, amount = tx_data
         if add_transaction(recipient, amount=amount):
             print('Added transaction!')
-        else: 
+        else:
             print('Transaction failed!')
         print(open_transactions)
     elif user_choice == '2':
