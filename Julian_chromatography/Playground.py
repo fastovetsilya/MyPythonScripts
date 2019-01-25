@@ -106,3 +106,42 @@ cluster = AgglomerativeClustering(n_clusters=3, affinity='euclidean',
 clust_labels = cluster.fit_predict(Peak_properties_list.iloc[:, :-1])
 
 
+
+
+# Automatic picker
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.set_title('Please select subset')
+
+line, = ax.plot(np.array(Data.iloc[1:, 2], dtype='float'), picker=1) # 5 points tolerance
+picks = []
+
+def onpick(event):
+    thisline = event.artist
+    xdata = thisline.get_xdata()
+#    ydata = thisline.get_ydata()
+    ind = event.ind
+    print(xdata[ind][1])
+    picks.append(xdata[ind][1])
+    if len(picks) == 2:
+        plt.close()
+        print('Subset selected!')
+        
+#    points = tuple(zip(xdata[ind], ydata[ind]))
+#    print('onpick points:', points)
+    
+
+fig.canvas.mpl_connect('pick_event', onpick)
+
+    
+
+
+
+
+
+
+
