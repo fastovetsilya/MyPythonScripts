@@ -137,11 +137,34 @@ def onpick(event):
 
 fig.canvas.mpl_connect('pick_event', onpick)
 
+# K-means
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import scale
+
+Pr_sample = scale(Pr.iloc[:, [0,7]])
+inertia_list = np.array([])
+for i in range(1, 20):
+    kmeans = KMeans(n_clusters=i)
+    kmeans = kmeans.fit(Pr_sample)
+    inertia_list = np.append(inertia_list, kmeans.inertia_)
     
+plt.figure()
+plt.plot(inertia_list)
+kmeans = KMeans(n_clusters=4)
+kmeans = kmeans.fit_predict(Pr_sample)
 
+'''
+from sklearn.cluster import AgglomerativeClustering
+from scipy.cluster.hierarchy import dendrogram, linkage  
 
+linked = linkage(Pr_sample, method='ward', 
+                 metric='euclidean')
+plt.figure()
+dendrogram(linked,
+            orientation='top',
+            #labels=labelList,
+            distance_sort='descending')
 
-
-
-
-
+plt.figure()
+plt.plot(Pr_sample)
+'''
