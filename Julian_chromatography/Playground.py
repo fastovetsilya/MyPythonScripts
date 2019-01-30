@@ -143,15 +143,51 @@ from sklearn.preprocessing import scale
 
 Pr_sample = scale(Pr.iloc[:, [0,7]])
 inertia_list = np.array([])
-for i in range(1, 20):
+for i in range(1, 30):
     kmeans = KMeans(n_clusters=i)
     kmeans = kmeans.fit(Pr_sample)
     inertia_list = np.append(inertia_list, kmeans.inertia_)
     
 plt.figure()
 plt.plot(inertia_list)
+plt.figure()
+plt.plot(np.diff(inertia_list, n=1))
 kmeans = KMeans(n_clusters=4)
 kmeans = kmeans.fit_predict(Pr_sample)
+
+# Automatic cluster selection
+from sklearn.linear_model import TheilSenRegressor
+from sklearn.linear_model import RANSACRegressor
+
+y = inertia_list[:5]
+X = np.array([i for i in range(len(np.ones_like(y)))], dtype='float')
+X = X.reshape(1,-1).T
+#X = np.vstack((X, y)).T
+#reg = TheilSenRegressor().fit(X, y)
+#y_predicted = reg.predict(X)
+#residuals = y - y_predicted
+#plt.figure()
+#plt.scatter(X[:, 0], y)
+#plt.plot(X[:, 0], y_predicted)
+#plt.figure()
+#plt.hist(residuals,  bins='auto', color='#0504aa', alpha=0.7, rwidth=0.85)
+#         
+reg2 = RANSACRegressor().fit(X, y)
+y_predicted2 = reg2.predict(X)
+residuals2 = y - y_predicted2
+plt.figure()
+plt.scatter(X[:, 0], y)
+plt.plot(X[:, 0], y_predicted2)
+
+
+
+
+
+
+
+
+
+
 
 '''
 from sklearn.cluster import AgglomerativeClustering
@@ -168,3 +204,7 @@ dendrogram(linked,
 plt.figure()
 plt.plot(Pr_sample)
 '''
+
+def round_up_to_odd(f):
+    f = int(np.ceil(f))
+    return f + 1 if f % 2 == 0 else f
