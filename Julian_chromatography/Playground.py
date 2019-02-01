@@ -143,7 +143,7 @@ from sklearn.preprocessing import scale
 
 Pr_sample = scale(Pr.iloc[:, [0,7]])
 inertia_list = np.array([])
-for i in range(1, 30):
+for i in range(1, 20):
     kmeans = KMeans(n_clusters=i)
     kmeans = kmeans.fit(Pr_sample)
     inertia_list = np.append(inertia_list, kmeans.inertia_)
@@ -153,7 +153,21 @@ plt.plot(inertia_list)
 plt.figure()
 plt.plot(np.diff(inertia_list, n=1))
 kmeans = KMeans(n_clusters=4)
-kmeans = kmeans.fit_predict(Pr_sample)
+kmeans = kmeans.fit(Pr_sample)
+
+# Davies–Bouldin index
+db_list = np.array([])
+for i in range(2, 20):
+    kmeans = KMeans(n_clusters=i)
+    kmeans = kmeans.fit(Pr_sample)
+    kmeans_labels = kmeans.labels_
+    db = db_index(Pr_sample, kmeans_labels)
+    db_list = np.append(db_list, db)
+    
+plt.figure()
+plt.plot(db_list)
+
+
 
 # Automatic cluster selection
 from sklearn.linear_model import TheilSenRegressor
@@ -187,7 +201,8 @@ plt.plot(X[:, 0], y_predicted2)
 
 
 
-
+Pr = Chr.Peak_properties_list
+Pr_sample = scale(Pr.iloc[:, [0,7]])
 
 '''
 from sklearn.cluster import AgglomerativeClustering
