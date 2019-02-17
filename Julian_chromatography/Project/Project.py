@@ -8,17 +8,17 @@ Created on Thu Jan 24 21:50:36 2019
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-#from mpl_toolkits import mplot3d
-#from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits import mplot3d
+from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.collections import PolyCollection
 from matplotlib import colors as mcolors
-#from matplotlib.colors import ListedColormap
+from matplotlib.colors import ListedColormap
 from scipy.signal import savgol_filter
 from peakutils import baseline
 from scipy.signal import find_peaks
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import scale
-#from sklearn.linear_model import RANSACRegressor
+from sklearn.linear_model import RANSACRegressor
 import easygui
 from bayes_opt import BayesianOptimization
 from bayes_opt.observer import JSONLogger
@@ -28,7 +28,7 @@ from bayes_opt.event import Events
 #from skopt import gp_minimize
 #from scipy.optimize import minimize
 #from skopt.plots import plot_convergence
-#from Dixon import Dixon_test
+from Dixon import Dixon_test
 from DBI import db_index
 
 class Chromo_clusterize():
@@ -46,6 +46,7 @@ class Chromo_clusterize():
         self.max_params = []
         self.quality_opt_progress = []
         self.scikit_optimized = []
+        self.pbounds = []
     
     
     def load_data(self):
@@ -165,7 +166,7 @@ class Chromo_clusterize():
     def plot_extracted_peaks(self, layer=1):
         plt.figure()
         vect = self.Subset_debaselined[:, layer]
-#        peaks, properties = find_peaks(vect, prominence=10e4, width=10)
+#       peaks, properties = find_peaks(vect, prominence=10e4, width=10)
         properties = self.Peak_properties_list[
                 self.Peak_properties_list['Sample_number'] == layer]
         peaks = properties['peaks']
@@ -177,35 +178,38 @@ class Chromo_clusterize():
                    xmax=properties["right_ips"], color = "C1")
         
         
-#    def opti_clust(self):
-#        Pr = Chr.Peak_properties_list
-#        Pr_sample = scale(Pr.iloc[:, [0,7]])
-#        inertia_list = np.array([])
-#        for i in range(1, 25):
-#            kmeans = KMeans(n_clusters=i, n_init = 50)
-#            kmeans = kmeans.fit(Pr_sample)
-#            inertia_list = np.append(inertia_list, kmeans.inertia_)
-#            
-#            if i >= 3:
-#                y = inertia_list[:i]
-#                X = np.array([i for i in range(len(np.ones_like(y)))], 
-#                              dtype='float')
-#                X = X.reshape(1,-1).T
-#                reg = RANSACRegressor().fit(X, y)
-#                y_predicted = reg.predict(X)
-#                residuals = y - y_predicted
-#                outliers = Dixon_test().dixon_test(residuals, left = False, 
-#                                     q_dict='Q90')
-#                if outliers[1] is not None:
-#                    print('Stop! Optimal num_clust is: ', i)
-#                    break
-#        num_clust = i
-#        kmeans = KMeans(n_clusters=num_clust, n_init = 100, 
-#                        init='random', max_iter = 1000, tol = 1e-6
-#                        )
-#        self.cluster = kmeans.fit_predict(Pr_sample)
+    def opti_clust(self):
+        Pr = Chr.Peak_properties_list
+        Pr_sample = scale(Pr.iloc[:, [0,7]])
+        inertia_list = np.array([])
+        max_no_clusters = np.shape(Pr_sample)[0] - 1
+        for i in range(1, max_no_clusters):
+            kmeans = KMeans(n_clusters=i, n_init = 50)
+            kmeans = kmeans.fit(Pr_sample)
+            inertia_list = np.append(inertia_list, kmeans.inertia_)
+            
+            if i >= 3:
+                y = inertia_list[:i]
+                X = np.array([i for i in range(len(np.ones_like(y)))], 
+                              dtype='float')
+                X = X.reshape(1,-1).T
+                reg = RANSACRegressor().fit(X, y)
+                y_predicted = reg.predict(X)
+                residuals = y - y_predicted
+                outliers = Dixon_test().dixon_test(residuals, left = False, 
+                                     q_dict='Q90')
+                if outliers[1] is not None:
+                    break
+        num_clust = i - 1
+        kmeans = KMeans(n_clusters=num_clust, n_init = 100, 
+                        init='random', max_iter = 1000, tol = 1e-6
+                        )
+        print('Optimal RANSAC num_clust is: ', num_clust)
+        self.cluster = kmeans.fit_predict(Pr_sample)
 #        self.cluster_quality = kmeans.fit(Pr_sample).inertia_ / np.shape(Pr_sample)[0]
-#            
+        self.cluster_quality = db_index(Pr_sample, kmeans.labels_)
+        print('Quality parameter is: ', self.cluster_quality)
+            
         
     def opti_clust_DBI(self):
          Pr = Chr.Peak_properties_list
@@ -250,7 +254,8 @@ class Chromo_clusterize():
         self.filter_subset(polyorder=polyorder, window=window)
         self.debaseline_subset(poly_order=poly_debase)
         self.extract_peaks(prominence=prominence, width=width)
-        self.opti_clust_DBI()
+        self.opti_clust()
+#        self.opti_clust_DBI()
         self.quality_opt_progress.append(self.cluster_quality)
         return(-self.cluster_quality)
         
@@ -268,9 +273,7 @@ class Chromo_clusterize():
         
     def run_optimization(self, init_points=2, n_iter=30, alpha=1e-5):
         Chr.quality_opt_progress = []
-        pbounds = {'polyorder': (2, 2), 'window': (10, 500),
-                   'poly_debase':(1, 1), 'prominence':(10e4, 10e4),
-                   'width':(10, 10)}
+        pbounds = self.pbounds
         optimizer = BayesianOptimization(
                 f=self.function_to_be_optimized,
                 pbounds=pbounds)
@@ -315,9 +318,12 @@ Chr.extract_peaks(Set='Subset_debaselined', prominence=10e3, width=20)
 Chr.sample_plot(Set='Subset', start_layer=1)
 Chr.sample_plot(Set='Subset_filtered', start_layer=1)
 Chr.sample_plot(Set='Subset_debaselined', start_layer=1)
-Chr.plot_extracted_peaks(layer=10)
+Chr.plot_extracted_peaks(layer=2)
 
-Chr.run_optimization(init_points=5, n_iter=30, alpha=1e-5)
+Chr.pbounds = {'polyorder': (1, 9), 'window': (10, 20),
+                   'poly_debase':(1, 10), 'prominence':(10e4, 10e4),
+                   'width':(1, 10)}
+Chr.run_optimization(init_points=0, n_iter=5, alpha=10e-4)
 plt.figure()
 plt.plot(Chr.quality_opt_progress)
 
