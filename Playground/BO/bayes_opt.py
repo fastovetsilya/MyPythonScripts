@@ -19,7 +19,7 @@ def f(x):
     1 / (x ** 2 + 1) + noise
     return result
 
-plt.scatter(xs, f(xs), s = 0.1)
+#plt.scatter(xs, f(xs), s = 0.1)
 
 
 # Adjust optimizer
@@ -37,20 +37,22 @@ optimizer = BayesianOptimization(
     random_state=1,
 )
 
-optimizer.set_gp_params(alpha = 10e-3, n_restarts_optimizer=10)
+optimizer.set_gp_params(alpha = 10e-3, n_restarts_optimizer=0)
+xlist = []
 targetlist = []
 errorlist = []
 
-for i in range(100):
+for i in range(30):
     print('Iteration: ', i)
     
-    if np.random.randint(1, 10) == 5:
+    if i <= 10:
         print('Trying random value...')
         next_point_to_probe = {'x': np.random.randint(-2, 10) + np.random.rand()}
     else:
         next_point_to_probe = optimizer.suggest(utility)
         
     print("Next point to probe is:", next_point_to_probe)
+    xlist.append(next_point_to_probe['x'])    
     
     predicted, sigma_pred = optimizer._gp.predict(
             np.array([next_point_to_probe['x']]).reshape(-1, 1), 
@@ -59,8 +61,8 @@ for i in range(100):
     
     target = f(**next_point_to_probe)
     print("Found the target value to be:", target)
-    
     targetlist.append(target)
+    
     error = (predicted - target) ** 2
     errorlist.append(error)
     
@@ -71,6 +73,14 @@ for i in range(100):
     
 plt.plot(targetlist)
 plt.plot(errorlist)
+
+predicted, sigma_pred = optimizer._gp.predict(xs.reshape(-1, 1), return_std=True)
+
+plt.plot(xs, predicted, 'g-')
+plt.plot(xs, predicted + sigma_pred, 'r--')
+plt.plot(xs, predicted - sigma_pred, 'r--')
+plt.scatter(xs, f(xs), s = 0.5)
+plt.scatter(xlist, targetlist, color='black', s = 5)
 
 
 
