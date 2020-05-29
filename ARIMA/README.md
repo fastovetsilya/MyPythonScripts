@@ -1,6 +1,6 @@
 #  ARIMA for Mauna Loa Weekly Atmospheric CO2 prediction
 
-# Approach
+## Approach
 Seasonal ARIMA model was used to forecast a time series of weekly CO2 measurements with clear seasonality.
 
 ## Description of the data
