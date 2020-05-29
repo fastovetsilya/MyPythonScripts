@@ -9,7 +9,7 @@ The algorithm is based on AdaBoost classifier trained on Haar features of the fa
 
 ### MTCNN
 
-At the second step I run Multitask Cascaded Convolutional Networks (MTCNN) to detect faces. An MTCNN is an architecture that combines three neural networks to suggest the best bbx for faces. Each of the three models are trained separately. For this reason, it is very difficult to train from scratch, but pre-trained models are available. For this project we use the following implementation of MTCNN: https://github.com/jbrownlee/mtcnn . MTCNN was developed in 2016 [https://arxiv.org/abs/1604.02878] and today is considered one of the best-performing models. 
+At the second step I run Multitask Cascaded Convolutional Networks (MTCNN) to detect faces. An MTCNN is an architecture that combines three neural networks to suggest the best bbx for faces. Each of the three models are trained separately. For this reason, it is very difficult to train from scratch, but pre-trained models are available. For this project I use the following implementation of MTCNN: https://github.com/jbrownlee/mtcnn . MTCNN was developed in 2016 [https://arxiv.org/abs/1604.02878] and today is considered one of the best-performing models. 
 
 ### Comparing model performance
 
