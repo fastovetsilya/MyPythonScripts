@@ -72,12 +72,28 @@ def make_prediction(net, layer_names, labels, image, confidence, threshold):
 
     return boxes, confidences, classIDs, idxs
 
+def make_1080p():
+    cap.set(3, 1920)
+    cap.set(4, 1080)
+
+def make_720p():
+    cap.set(3, 1280)
+    cap.set(4, 720)
+
+def make_480p():
+    cap.set(3, 640)
+    cap.set(4, 480)
+
+def change_res(width, height):
+    cap.set(3, width)
+    cap.set(4, height)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-w', '--weights', type=str, default='model/yolov3.weights', help='Path to model weights')
-    parser.add_argument('-cfg', '--config', type=str, default='model/yolov3.cfg', help='Path to configuration file')
-    parser.add_argument('-l', '--labels', type=str, default='model/coco.names', help='Path to label file')
+    parser.add_argument('-w', '--weights', type=str, default='darknet/yolov4-tiny.weights', help='Path to model weights')
+    parser.add_argument('-cfg', '--config', type=str, default='darknet/cfg/yolov4-tiny.cfg', help='Path to configuration file')
+    parser.add_argument('-l', '--labels', type=str, default='darknet/cfg/coco.names', help='Path to label file')
     parser.add_argument('-c', '--confidence', type=float, default=0.5, help='Minimum confidence for a box to be detected.')
     parser.add_argument('-t', '--threshold', type=float, default=0.3, help='Threshold for Non-Max Suppression')
     parser.add_argument('-u', '--use_gpu', default=False, action='store_true', help='Use GPU (OpenCV must be compiled for GPU). For more info checkout: https://www.pyimagesearch.com/2020/02/03/how-to-use-opencvs-dnn-module-with-nvidia-gpus-cuda-and-cudnn/')
@@ -132,6 +148,7 @@ if __name__ == '__main__':
             cap = cv2.VideoCapture(args.video_path)
         else:
             cap = cv2.VideoCapture(0)
+            make_480p()
 
         if args.save:
             width = int(cap.get(3))
